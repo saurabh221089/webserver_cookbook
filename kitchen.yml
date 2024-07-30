@@ -26,10 +26,10 @@ platforms:
       name: vcenter
       vcenter_username: <%= ENV['VCENTER_USER'] %>
       vcenter_password: <%= ENV['VCENTER_PASSWORD'] %>
-      vcenter_host: gascm-testvcsa1.systems.dc.gdi
+      vcenter_host: <%= ENV['VCENTER_HOST'] %>
       vcenter_disable_ssl_verify: true
-      datacenter: AS_TEST
-      cluster: TEST
+      datacenter: <%= ENV['VCENTER_DC'] %>
+      cluster: <%= ENV['VCENTER_CLUSTER'] %>
       networks: 
         - name: ANY_ANY_CTL_OB
       vm_customization:
@@ -52,32 +52,27 @@ platforms:
       folder: POC
       linked_clone: true
     transport:
-      username: "atlasadmin"
-      ssh_key: <%= "#{ENV['ATLASADMIN_KEY']}" %>
+      username: "packer"
+      ssh_key: <%= "#{ENV['SSH_PUBLIC_KEY']}" %>
     driver_config:
-      template: templates/granicus_rocky_linux9_2024_07_09
+      template: templates/rocky_linux9_template
     provisioner:
-      product_version: 18.4.2
-      install_strategy: always
-      download_url: https://artifactory.granicuslabs.com/artifactory/chef-custom-packages/chef-builds/18.4.2/chef-18.4.2-1.el7.x86_64.rpm
+      product_version: latest
+      install_strategy: once
 
   - name: vagrant-ubuntu-20.04
-    attributes:
-      apt:
-        unattended_upgrades:
-          enable: true
-    driver_config:
-      box: base-build-ubuntu2004-full
-      box_url: https://artifactory.granicuslabs.com/artifactory/api/vagrant/vagrant/base-build-ubuntu2004-full
-    lifecycle:
-      pre_converge:
-        - remote: sudo mount -o remount,exec /tmp
-      post_converge:
-        - remote: sudo mount -o remount,noexec /tmp
+    driver:
+      box: bento/ubuntu-20.04
     provisioner:
-      product_version: 18.4.2
-      install_strategy: always
-      download_url: https://artifactory.granicuslabs.com/artifactory/chef-custom-packages/chef-builds/18.4.2/chef-18.4.2-1-20.amd64.deb
+      product_version: latest
+      install_strategy: once
+
+  - name: vagrant-rockylinux-9
+    driver:
+      box: rockylinux/9
+    provisioner:
+      product_version: latest
+      install_strategy: once
 
 suites:
   - name: webserver
@@ -86,4 +81,4 @@ suites:
     verifier:
       inspec_tests:
         - test/integration/default
-    includes: [ vcenter-rocky-linux-9, vagrant-ubuntu-20.04 ]
+    includes: [ vcenter-rocky-linux-9, vagrant-ubuntu-20.04, vagrant-rockylinux-9 ]
