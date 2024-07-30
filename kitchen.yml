@@ -1,0 +1,89 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  install_strategy: once
+  sudo_command: sudo
+  retry_on_exit_code:
+    - 35
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: vcenter-rocky-linux-9
+    lifecycle:
+      pre_converge:
+        - remote: sudo mount -o remount,exec /tmp
+      post_converge:
+        - remote: sudo mount -o remount,noexec /tmp
+      pre_destroy:
+        - remote: "sudo subscription-manager unregister ||:"
+          skippable: true
+    driver:
+      name: vcenter
+      vcenter_username: <%= ENV['VCENTER_USER'] %>
+      vcenter_password: <%= ENV['VCENTER_PASSWORD'] %>
+      vcenter_host: gascm-testvcsa1.systems.dc.gdi
+      vcenter_disable_ssl_verify: true
+      datacenter: AS_TEST
+      cluster: TEST
+      networks: 
+        - name: ANY_ANY_CTL_OB
+      vm_customization:
+        numCPUs: 2
+        memoryMB: 2048
+        annotation: "Kitchen VM by <%= ENV['USER'] %> on <%= Time.now.to_s %>"
+      guest_customization:
+        timezone: 'US/Pacific'
+        ip_address: 10.3.5.7
+        subnet_mask: 255.255.255.0
+        timeout_ip: 300
+        gateway:
+        - 10.3.5.1
+        dns_domain: 'systems.dc.gdi'
+        dns_server_list:
+        - 10.1.6.30
+        - 8.8.8.8
+        dns_suffix_list: 
+        - 'systems.dc.gdi'
+      folder: POC
+      linked_clone: true
+    transport:
+      username: "atlasadmin"
+      ssh_key: <%= "#{ENV['ATLASADMIN_KEY']}" %>
+    driver_config:
+      template: templates/granicus_rocky_linux9_2024_07_09
+    provisioner:
+      product_version: 18.4.2
+      install_strategy: always
+      download_url: https://artifactory.granicuslabs.com/artifactory/chef-custom-packages/chef-builds/18.4.2/chef-18.4.2-1.el7.x86_64.rpm
+
+  - name: vagrant-ubuntu-20.04
+    attributes:
+      apt:
+        unattended_upgrades:
+          enable: true
+    driver_config:
+      box: base-build-ubuntu2004-full
+      box_url: https://artifactory.granicuslabs.com/artifactory/api/vagrant/vagrant/base-build-ubuntu2004-full
+    lifecycle:
+      pre_converge:
+        - remote: sudo mount -o remount,exec /tmp
+      post_converge:
+        - remote: sudo mount -o remount,noexec /tmp
+    provisioner:
+      product_version: 18.4.2
+      install_strategy: always
+      download_url: https://artifactory.granicuslabs.com/artifactory/chef-custom-packages/chef-builds/18.4.2/chef-18.4.2-1-20.amd64.deb
+
+suites:
+  - name: webserver
+    run_list: 
+      - recipe[webserver::default]
+    verifier:
+      inspec_tests:
+        - test/integration/default
+    includes: [ vcenter-rocky-linux-9, vagrant-ubuntu-20.04 ]
