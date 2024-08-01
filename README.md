@@ -10,6 +10,7 @@ $ chef-cli generate cookbook webserver
 $ knife cookbook upload webserver
 
 ### Knife commands
+```
 knife block list
 knife status
 knife node list	---Return a list of nodes
@@ -23,7 +24,9 @@ knife client delete -y test-node1
 knife node delete -y test-node1
 knife search node "tags:*ubuntu* OR roles:*ubuntu* OR fqdn:*ubuntu*   ---List all the nodes details
 knife search node 'platform:windows* AND roles:gitlab*'
-**Knife-Vsphere commands**
+```
+### Knife-Vsphere commands
+```
 knife vsphere datastore list
 knife vsphere template list
 knife vsphere vm disk list webserver1
@@ -31,3 +34,4 @@ knife vsphere vm disk list webserver1
 knife vsphere vm disk extend VMNAME SIZE. (Extends the disk of vm VMNAME to SIZE kilobytes.)
 knife vsphere vm state gassi-qamail1
 VM gassi-qamail1 is currently powered on
+```
